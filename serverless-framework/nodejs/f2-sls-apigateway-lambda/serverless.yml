@@ -1,0 +1,35 @@
+service: f2-sls-apigateway-lambda
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  profile: abehera-dev
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+
+functions:
+  function1:
+    handler: index.handler
+    events:
+      - http:
+          method: GET
+          path: hello
+  CreateStudent:
+    handler: CreateStudent.createStudent
+    events:
+      - http:
+          method: POST
+          path: /Student/create
+  GetStudent:
+    handler: GetStudent.getStudent
+    events:
+      - http:
+          method: GET
+          path: /Student
+  ListStudents:
+    handler: ListStudents.listStudents
+    events:
+      - http:
+          method: GET
+          path: /Student/all
