@@ -8,5 +8,9 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "serverless-iam-roles-per-function": "^3.2.0",
+    "serverless-lift": "^1.24.0"
+  }
 }

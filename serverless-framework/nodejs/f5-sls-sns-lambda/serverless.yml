@@ -1,0 +1,24 @@
+service: f5-sls-sns-lambda
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  profile: abehera-dev
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+
+functions:
+  CreateStudent:
+    handler: CreateStudent.createStudent
+    events:
+      - sns:
+          arn: !Ref StudentSNS
+          topicName: studentsns
+
+resources:
+  Resources:
+    StudentSNS:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: studentsns

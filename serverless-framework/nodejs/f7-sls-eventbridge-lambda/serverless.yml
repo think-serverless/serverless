@@ -1,0 +1,24 @@
+service: f6-sls-eventbridge-lambda
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  profile: abehera-dev
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+
+functions:
+  CreateStudent:
+    handler: CreateStudent.createStudent
+    events:
+      - s3:
+          bucket: !Ref StudentBucket
+          event: s3:ObjectCreated:*
+          existing: true
+resources:
+  Resources:
+    StudentBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:service}-${self:provider.stage}-studentbucket

@@ -1,0 +1,56 @@
+service: f3-sls-apigateway-lambda-sqs
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  profile: abehera-dev
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+plugins:
+  - serverless-iam-roles-per-function
+
+custom:
+  StudentSQS: arn:aws:sqs:${aws:region}:${aws:accountId}:${self:service}-${self:provider.stage}-students-queue-Processed
+  StudentNPSQS: arn:aws:sqs:${aws:region}:${aws:accountId}:${self:service}-${self:provider.stage}-students-queue-NotProcessed
+functions:
+  CreateStudent:
+    handler: CreateStudent.createStudent
+    description: "Create Students"
+    destinations:
+      # onSuccess: arn:aws:sqs:${aws:region}:${aws:accountId}:${self:service}-${self:provider.stage}-Students-queue-Processed
+      # onFailure: arn:aws:sqs:${aws:region}:${aws:accountId}:${self:service}-${self:provider.stage}-Students-queue-NotProcessed
+      onSuccess: ${self:custom.StudentSQS}
+      onFailure: ${self:custom.StudentNPSQS}
+    events:
+      - http:
+          method: POST
+          path: /Student/create
+    iamRoleStatementsName: ${self:service}-${self:provider.stage}-CreateStudent-role
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - sqs:sendMessage
+        Resource:
+          Fn::GetAtt:
+            - StudentSQS
+            - Arn
+      - Effect: Allow
+        Action:
+          - sqs:sendMessage
+        Resource:
+          Fn::GetAtt:
+            - StudentNPSQS
+            - Arn
+resources:
+  Resources:
+    StudentSQS:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-${self:provider.stage}-students-queue-Processed
+        MessageRetentionPeriod: 604800 # 7 days
+    StudentNPSQS:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-${self:provider.stage}-students-queue-NotProcessed
+        MessageRetentionPeriod: 604800 # 7 days

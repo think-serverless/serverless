@@ -1,0 +1,24 @@
+service: f4-sls-sqs-lambda
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  profile: abehera-dev
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+
+functions:
+  CreateStudent:
+    handler: CreateStudent.createStudent
+    events:
+      - sqs:
+          arn: arn:aws:sqs:${aws:region}:${aws:accountId}:${self:service}-${self:provider.stage}-studentsqs-queue
+          batchSize: 1
+resources:
+  Resources:
+    StudentSQS:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-${self:provider.stage}-studentsqs-queue
+        MessageRetentionPeriod: 604800
