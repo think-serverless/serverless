@@ -1,4 +1,4 @@
-service: f6-sls-eventbridge-lambda
+service: f7-sls-eventbridge-lambda
 frameworkVersion: "3"
 
 provider:
@@ -12,13 +12,17 @@ functions:
   CreateStudent:
     handler: CreateStudent.createStudent
     events:
-      - s3:
-          bucket: !Ref StudentBucket
-          event: s3:ObjectCreated:*
-          existing: true
+      - eventBridge:
+          eventBus: !Ref StudentEventBus
+          pattern:
+            source:
+              - student.create
+            detail:
+              type:
+                - student
 resources:
   Resources:
-    StudentBucket:
-      Type: AWS::S3::Bucket
+    StudentEventBus:
+      Type: AWS::Events::EventBus
       Properties:
-        BucketName: ${self:service}-${self:provider.stage}-studentbucket
+        Name: ${self:service}-${self:provider.stage}-studentevent-bus
