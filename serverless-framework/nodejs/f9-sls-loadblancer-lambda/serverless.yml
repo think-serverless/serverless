@@ -1,0 +1,29 @@
+service: f9-sls-loadbalancer-lambda
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  profile: abehera-dev
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+plugins:
+  - serverless-iam-roles-per-function
+
+functions:
+  CreateStudent:
+    handler: CreateStudent.createStudent
+    events:
+      - alb:
+          listenerArn: !Ref StudentALB
+          priority: 1
+
+resources:
+  Resources:
+    StudentALB:
+      Type: AWS::ElasticLoadBalancing::LoadBalancer
+      Properties:
+        Listeners:
+          - InstancePort:
+            LoadBalancerPort:
+            Protocol:

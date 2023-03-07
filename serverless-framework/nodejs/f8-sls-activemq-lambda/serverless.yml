@@ -1,0 +1,63 @@
+service: f8-sls-activemq-lambda
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  profile: abehera-dev
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+plugins:
+  - serverless-iam-roles-per-function
+
+functions:
+  CreateStudent:
+    handler: CreateStudent.createStudent
+    events:
+      - activemq:
+          arn: !GetAtt StudentActiveMQ.Arn
+          queue: StudentActiveQueue
+          batchSize: 1
+          maximumBatchingWindow: 30
+          basicAuthArn: !Ref StudentSecretsManager
+    iamRoleStatementsName: ${self:service}-${self:provider.stage}-CreateStudent-Role
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+        Resource: "*"
+      - Effect: Allow
+        Action:
+          - ec2:*
+        Resource: "*"
+      - Effect: Allow
+        Action:
+          - mq:*
+        Resource: "*"
+      - Effect: Allow
+        Action:
+          - secretsmanager:Get*
+        Resource: "*"
+resources:
+  Resources:
+    StudentActiveMQ:
+      Type: AWS::AmazonMQ::Broker
+      Properties:
+        AutoMinorVersionUpgrade: false
+        BrokerName: ${self:service}-${self:provider.stage}-student-active-mq
+        DeploymentMode: SINGLE_INSTANCE
+        EngineType: ACTIVEMQ
+        EngineVersion: 5.15.0
+        HostInstanceType: mq.t2.micro
+        PubliclyAccessible: true
+        Users:
+          - Password: achyut@1234567
+            Username: achyut
+            ConsoleAccess: true
+    StudentSecretsManager:
+      Type: AWS::SecretsManager::Secret
+      Properties:
+        Name: ${self:service}-${self:provider.stage}-secretManager
+        SecretString: '{"username":"achyut","password":"achyut@1234567"}'
