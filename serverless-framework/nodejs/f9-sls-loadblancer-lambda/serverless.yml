@@ -7,23 +7,41 @@ provider:
   profile: abehera-dev
   region: ap-south-1
   stage: ${opt:stage, 'dev'}
-plugins:
-  - serverless-iam-roles-per-function
 
 functions:
   CreateStudent:
     handler: CreateStudent.createStudent
     events:
       - alb:
-          listenerArn: !Ref StudentALB
+          listenerArn: !Ref StudentListener
           priority: 1
-
+          conditions:
+            path: /createStudent
 resources:
   Resources:
     StudentALB:
-      Type: AWS::ElasticLoadBalancing::LoadBalancer
+      Type: AWS::ElasticLoadBalancingV2::LoadBalancer
       Properties:
-        Listeners:
-          - InstancePort:
-            LoadBalancerPort:
-            Protocol:
+        IpAddressType: ipv4
+        Name: StudentALB
+        Scheme: internet-facing
+        SecurityGroups:
+          - sg-2e83d155
+        Subnets:
+          - subnet-ae3fd9c5
+          - subnet-e87225a4
+        Type: application
+    StudentListener:
+      Type: AWS::ElasticLoadBalancingV2::Listener
+      Properties:
+        DefaultActions:
+          - Type: forward
+            TargetGroupArn: !Ref LambdaTG
+        LoadBalancerArn: !Ref StudentALB
+        Port: 80
+        Protocol: HTTP
+    LambdaTG:
+      Type: AWS::ElasticLoadBalancingV2::TargetGroup
+      Properties:
+        Name: LambdaTG
+        TargetType: lambda

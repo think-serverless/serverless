@@ -1,6 +1,9 @@
 module.exports.createStudent = async (event) => {
-  console.log(JSON.stringify(event));
-  const student = event.detail;
+  console.log(event);
+  const base64string = event.messages[0].data;
+  let bufferObj = Buffer.from(base64string, "base64");
+  let StudentStr = bufferObj.toString("utf8");
+  const student = JSON.parse(StudentStr);
   console.log(
     `Student Details ${student.id} - ${student.name} - ${student.rollNo}`
   );

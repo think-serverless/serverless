@@ -40,6 +40,10 @@ functions:
         Action:
           - secretsmanager:Get*
         Resource: "*"
+      - Effect: Allow
+        Action:
+          - kms:*
+        Resource: "*"
 resources:
   Resources:
     StudentActiveMQ:
@@ -56,6 +60,18 @@ resources:
           - Password: achyut@1234567
             Username: achyut
             ConsoleAccess: true
+        SecurityGroups:
+          - !Ref TestMQSG
+    TestMQSG:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: Allow trafiic to Active MQ
+        GroupName: TestMQ-SG
+        SecurityGroupIngress:
+          - IpProtocol: "-1"
+            CidrIp: 0.0.0.0/0
+        VpcId: vpc-d359a0b8
+
     StudentSecretsManager:
       Type: AWS::SecretsManager::Secret
       Properties:
