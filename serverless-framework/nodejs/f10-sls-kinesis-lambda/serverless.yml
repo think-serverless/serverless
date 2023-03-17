@@ -1,0 +1,50 @@
+service: f10-sls-kinesis-lambda
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  profile: abehera-dev
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+
+plugins:
+  - serverless-iam-roles-per-function
+
+functions:
+  CreateStudent:
+    handler: CreateStudent.createStudent
+    events:
+      - stream:
+          arn: arn:aws:kinesis:${aws:region}:${aws:accountId}:stream/Student
+          batchSize: 1
+          startingPosition: LATEST
+          maximumRetryAttempts: 10
+          enabled: true
+    iamRoleStatementsName: ${self:service}-${self:provider.stage}-CreateStudent-Role
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+        Resource: "*"
+      - Effect: Allow
+        Action:
+          - kinesis:DescribeStream
+          - kinesis:DescribeStreamSummary
+          - kinesis:GetRecords
+          - kinesis:GetShardIterator
+          - kinesis:ListShards
+          - kinesis:ListStreams
+          - kinesis:SubscribeToShard
+        Resource: arn:aws:kinesis:${aws:region}:${aws:accountId}:stream/Student
+
+resources:
+  Resources:
+    KinesisStream:
+      Type: AWS::Kinesis::Stream
+      Properties:
+        Name: Student
+        StreamModeDetails:
+          StreamMode: ON_DEMAND
